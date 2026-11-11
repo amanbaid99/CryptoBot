@@ -1,0 +1,7 @@
+.env
+state_*.json
+*.tmp
+trades.csv
+bot.log
+STOP
+__pycache__/

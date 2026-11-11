@@ -26,7 +26,10 @@ Current stage: **paper trading only**. It has never placed a live order. The liv
 | `telegram.py` | Tiny stdlib-only Telegram client (`send`, `read_commands` via `getUpdates` polling). Ignores any chat id that isn't the owner's |
 | `config.yaml` | All rules and limits. Change numbers here, not in code |
 | `simulate.py` | Offline test harness: scripted price paths, safety-brake checks, catch-up check, fake-Telegram session |
-| `.github/workflows/paper-bot.yml` | Runs one paper check every 30 min (`13,43 * * * *`), commits `STATUS.md`, `trades.csv`, `state_paper.json`, `bot.log` back to the repo |
+| `.github/workflows/paper-bot.yml` | Manual-only now (schedule removed because ZebPay blocks GitHub runners). Runs one paper check, commits `STATUS.md`, `trades.csv`, `state_paper.json`, `bot.log` back to the repo |
+| `deploy/ORACLE_SETUP.md` | Step by step guide to run the bot 24/7 on an Oracle Cloud Always Free VM in India (Ubuntu 24.04, venv, read-only deploy key, systemd) |
+| `deploy/zebpay-bot.service` | systemd unit: `bot.py --paper-only`, user `ubuntu`, `Restart=on-failure` so a STOP file stops it for good |
+| `deploy/zebpay-bot.logrotate` | Weekly rotation for `bot.log` (copytruncate) |
 | `README.md` | User-facing setup guide (laptop, cloud, Telegram, going live) |
 
 Generated at runtime (gitignored locally, force-added by the workflow in the cloud): `state_<mode>.json`, `trades.csv`, `bot.log`, `STATUS.md`.
@@ -55,10 +58,11 @@ Buy Rs 200 when price is 3% below its 24h high. Exits: BTC stop 5% / target 10% 
 - **TDS is not counted as a loss** in P&L (it's a tax credit). Realised losses are tracked separately because Indian rules don't allow offsetting them against gains. Tax estimate = gains x 30% x 1.04 cess.
 - **Telegram over WhatsApp**: WhatsApp needs Meta's paid business API; Telegram is free and simple. Polling (`getUpdates`) instead of a webhook, since the cloud runner isn't a server.
 - **Private repo, every 30 min**: GitHub Free gives 2,000 Actions minutes/month for private repos; 30 min cadence uses about 1,440. Don't increase frequency.
+- **Only one bot per Telegram token**: two bots polling `getUpdates` steal each other's commands. That's why the GitHub schedule is off while the server runs.
 
 ## Open items / next steps
 
-1. **Verify ZebPay is reachable from GitHub's US runners.** Run the workflow manually and read `bot.log`. If every run logs `price check failed`, ZebPay is blocking the runners: move to an Oracle Cloud Always Free VM or a cheap VPS with a systemd service.
+1. **ZebPay blocks GitHub's US runners** (confirmed 11 Nov 2026: Cloudflare 403 on `sapi.zebpay.com`). Schedule removed; moving to an Oracle Always Free VM in Mumbai/Hyderabad via `deploy/ORACLE_SETUP.md`. Not yet confirmed that ZebPay accepts Oracle IPs (Step 4 of the guide tests this). Fallback: cheap Indian VPS or laptop. Also: on failure the bot logs the whole Cloudflare HTML page; worth trimming error text in `log` calls.
 2. **Look up real ZebPay fees** and set `fee_pct` (0.25 is a placeholder).
 3. **Check ZebPay minimum order sizes** for BTC/INR and ETH/INR. Rs 200 trades may be too small; `LiveBroker._check_min` reads ccxt market limits but this is unverified.
 4. **Live path is untested.** Before any live use: test `fetch_ohlcv`, `create_order` market buy semantics (ccxt may expect base quantity vs quote cost on ZebPay), `fetch_order` fill fields, and balance keys with a real key in read-only first.

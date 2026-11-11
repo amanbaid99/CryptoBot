@@ -1,0 +1,10 @@
+# Keeps bot.log small: one file per week, last 4 weeks kept, older ones deleted.
+/home/ubuntu/CryptoBot/bot.log {
+    weekly
+    rotate 4
+    compress
+    missingok
+    notifempty
+    copytruncate
+    su ubuntu ubuntu
+}

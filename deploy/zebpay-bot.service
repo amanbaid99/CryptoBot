@@ -1,0 +1,20 @@
+# systemd service for running the bot on a Linux server (paper mode).
+# Install: see deploy/ORACLE_SETUP.md, step 9.
+[Unit]
+Description=ZebPay rule bot (paper mode)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/ubuntu/CryptoBot
+# --paper-only forces paper mode whatever config.yaml says.
+ExecStart=/home/ubuntu/CryptoBot/.venv/bin/python bot.py --paper-only
+# Restart after a crash, but not after a clean stop (STOP file or systemctl stop).
+Restart=on-failure
+RestartSec=30
+# Everything the bot does already goes to bot.log. Crashes still show in journalctl.
+StandardOutput=null
+
+[Install]
+WantedBy=multi-user.target

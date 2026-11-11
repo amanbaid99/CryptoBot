@@ -1,10 +1,15 @@
 name: Paper trading bot
 
-# Runs the bot in PAPER mode every 30 minutes on GitHub's servers.
+# Runs the bot in PAPER mode once on GitHub's servers.
 # No API key is used, so it can never place a real order.
+#
+# The 30 minute schedule is OFF: ZebPay blocks GitHub's servers, and the bot
+# now runs on an Oracle server (see deploy/ORACLE_SETUP.md). Two bots running
+# at once would fight over Telegram commands. To turn the schedule back on,
+# add these two lines under "on:":
+#   schedule:
+#     - cron: "13,43 * * * *"
 on:
-  schedule:
-    - cron: "13,43 * * * *"   # every 30 min (odd minutes avoid GitHub's busiest times)
   workflow_dispatch:           # lets you press "Run workflow" manually from the Actions tab
 
 permissions:

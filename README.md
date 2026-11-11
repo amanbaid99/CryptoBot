@@ -72,7 +72,11 @@ The repo includes a GitHub Actions workflow (`.github/workflows/paper-bot.yml`) 
 - Each run checks prices, replays the 5 minute price candles since the last run (so a stop or target touched while it wasn't running still counts), then saves `STATUS.md`, `trades.csv` and its memory back into the repo.
 - GitHub's scheduled runs can start 5 to 20 minutes late and are occasionally skipped. Fine for paper trading, not good enough for real stop losses.
 - A private repo gets 2,000 free Actions minutes a month. Every 30 minutes uses about 1,440, so stay at 30 minutes or slower.
-- GitHub's servers are in the US. If the log shows "price check failed" on every run, ZebPay is blocking them and you'd need a small server instead (an Oracle free VM or a cheap VPS).
+- GitHub's servers are in the US, and ZebPay blocks them (every run logs "price check failed"). So the 30 minute schedule is now **off**, and the bot runs on a free Oracle server instead.
+
+## Run on a free Oracle server (recommended)
+
+A small Linux server in India that runs the bot 24/7 in paper mode, for free. Telegram replies come within a minute. Step by step guide: [`deploy/ORACLE_SETUP.md`](deploy/ORACLE_SETUP.md).
 
 ## Telegram alerts and commands (optional)
 

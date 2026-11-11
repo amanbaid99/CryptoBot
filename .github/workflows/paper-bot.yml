@@ -1,0 +1,50 @@
+name: Paper trading bot
+
+# Runs the bot in PAPER mode every 30 minutes on GitHub's servers.
+# No API key is used, so it can never place a real order.
+on:
+  schedule:
+    - cron: "13,43 * * * *"   # every 30 min (odd minutes avoid GitHub's busiest times)
+  workflow_dispatch:           # lets you press "Run workflow" manually from the Actions tab
+
+permissions:
+  contents: write              # needed to save the bot's state and trades back to the repo
+
+concurrency:
+  group: paper-bot             # never run two copies at once
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install
+        run: pip install -r requirements.txt
+
+      - name: Run one paper check
+        run: python bot.py --once --paper-only --report
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}   # optional
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}       # optional
+
+      - name: Keep the log short
+        run: |
+          if [ -f bot.log ]; then tail -n 2000 bot.log > bot.tmp && mv bot.tmp bot.log; fi
+
+      - name: Save state, trades and STATUS.md
+        run: |
+          git config user.name "paper-bot"
+          git config user.email "paper-bot@users.noreply.github.com"
+          git add -f STATUS.md state_paper.json bot.log
+          if [ -f trades.csv ]; then git add -f trades.csv; fi
+          git diff --cached --quiet || git commit -m "paper bot check $(date -u +'%Y-%m-%d %H:%M')"
+          git pull --rebase --autostash
+          git push

@@ -1,0 +1,50 @@
+# ZebPay rule-based bot settings
+# Change the numbers here, not in the code.
+
+mode: paper            # paper = pretend trades only. live = real orders on ZebPay.
+
+pairs:                 # which coins the bot watches
+  - BTC/INR
+  - ETH/INR
+
+check_every_seconds: 60   # how often the bot looks at prices
+
+# ---------- Money rules ----------
+amount_per_trade_inr: 200       # how much INR each buy uses
+max_open_positions: 2           # never hold more than this many trades at once
+max_total_invested_inr: 600     # hard cap on INR tied up in open trades
+paper_starting_balance_inr: 1000
+
+# ---------- Entry rule (buy the dip) ----------
+# Buy when price has fallen this % below its recent high.
+entry:
+  dip_from_high_pct: 3.0
+  lookback_hours: 24            # "recent high" = highest price in this window
+
+# ---------- Exit rules (per coin) ----------
+exits:
+  BTC/INR:
+    stop_loss_pct: 5.0          # sell if price falls 5% below buy price
+    take_profit_pct: 10.0       # sell if price rises 10% above buy price
+    trail_start_pct: 5.0        # once up 5%, start trailing
+    trail_gap_pct: 3.0          # trailing stop sits 3% below the highest price since buying
+  ETH/INR:
+    stop_loss_pct: 7.0
+    take_profit_pct: 14.0
+    trail_start_pct: 7.0
+    trail_gap_pct: 4.0
+
+# ---------- Telegram approval (optional) ----------
+# true = the bot messages you a buy signal and only buys after you reply /yes.
+# You can also switch this from Telegram with /set approval on
+require_approval: false
+approval_expiry_minutes: 60     # signal is dropped if you don't reply in time
+approval_max_drift_pct: 1.5     # cancel the buy if price moved more than this since the signal
+
+# ---------- Safety brakes ----------
+safety:
+  max_buys_per_day: 3
+  daily_loss_limit_inr: 100     # stop buying for the day after losing this much
+  cooldown_after_stop_minutes: 360   # after a stop loss on a coin, wait before re-entering it
+  fee_pct: 0.25                 # assumed fee per side (check ZebPay's fee page and update)
+  tds_pct: 1.0                  # 1% TDS on every sell (claimable in your ITR)
